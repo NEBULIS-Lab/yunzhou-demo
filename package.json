@@ -1,0 +1,25 @@
+{
+  "name": "yunzhou-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "leva": "^0.10.1",
+    "mujoco-js": "^0.0.7",
+    "mujoco-react": "^8.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
+    "typescript": "^5.7.2",
+    "vite": "^7.1.7"
+  }
+}
