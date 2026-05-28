@@ -3406,8 +3406,8 @@
             uiRefs.speed.innerText = velocity.length().toFixed(1) + " m/s";
 
             if(viewMode==='FPV'){
-                const off = new THREE.Vector3(0,6,12).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
-                const la = new THREE.Vector3(0,0,-20).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
+                const off = new THREE.Vector3(0,24,64).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
+                const la = new THREE.Vector3(0,2,-18).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
                 camera.position.lerp(droneGroup.position.clone().add(off),0.1);
                 camera.lookAt(droneGroup.position.clone().add(la));
             } else { controls.target.copy(droneGroup.position); controls.update(); }
