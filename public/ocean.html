@@ -548,8 +548,8 @@
 
         <div class="ui-label" style="margin-top: 10px; margin-bottom: 5px;">视角</div>
         <div class="btn-group">
-            <button id="btn-orbit" class="mode-btn">环绕</button>
-            <button id="btn-fpv" class="mode-btn active">跟随</button>
+            <button id="btn-orbit" class="mode-btn active">环绕</button>
+            <button id="btn-fpv" class="mode-btn">跟随</button>
         </div>
 
     </div>
@@ -747,7 +747,7 @@
         const MAX_ALT = 280.0;
         const REEF_FLOOR = -40.0;
         const WATER_SURFACE_Y = 170.0;
-        const USV_SURFACE_CLEARANCE = 3.0;
+        const USV_SURFACE_CLEARANCE = 1.6;
 
         const lakes = [];
 
@@ -2756,8 +2756,8 @@
             if (mode === 'ORBIT') { btnOrbit.classList.add('active'); btnFPV.classList.remove('active'); controls.enabled = true; }
             else { btnOrbit.classList.remove('active'); btnFPV.classList.add('active'); controls.enabled = false; }
         }
-        // Initialize view mode to FPV
-        setViewMode('FPV');
+        // Initialize view mode to orbit.
+        setViewMode('ORBIT');
 
         btnOrbit.addEventListener('click', () => setViewMode('ORBIT'));
         btnFPV.addEventListener('click', () => setViewMode('FPV'));
@@ -3271,7 +3271,7 @@
             uiRefs.speed.innerText = velocity.length().toFixed(1) + " m/s";
 
             if(viewMode==='FPV'){
-                const off = new THREE.Vector3(0,28,76).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
+                const off = new THREE.Vector3(0,24,62).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
                 const la = new THREE.Vector3(0,4,-12).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
                 camera.position.lerp(droneGroup.position.clone().add(off),0.1);
                 camera.lookAt(droneGroup.position.clone().add(la));

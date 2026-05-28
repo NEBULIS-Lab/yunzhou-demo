@@ -172,14 +172,19 @@ function MujocoArmPanel() {
 
 function App() {
   const oceanUrl = `${import.meta.env.BASE_URL}ocean.html`;
+  const [showArmPanel, setShowArmPanel] = useState(true);
+
   return (
     <main className="app-shell">
       <iframe className="ocean-scene" src={oceanUrl} title="云洲无人艇海洋环境" />
+      <button className="arm-visibility-toggle" onClick={() => setShowArmPanel((value) => !value)}>
+        {showArmPanel ? '隐藏机械臂仿真' : '显示机械臂仿真'}
+      </button>
       <div className="top-note">
         <strong>云洲无人艇海洋作业演示</strong>
         <span>高细节海洋场景 + MuJoCo 真实机械臂仿真</span>
       </div>
-      <MujocoArmPanel />
+      {showArmPanel && <MujocoArmPanel />}
     </main>
   );
 }
