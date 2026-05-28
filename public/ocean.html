@@ -747,7 +747,6 @@
         const MAX_ALT = 280.0;
         const REEF_FLOOR = -40.0;
         const WATER_SURFACE_Y = 170.0;
-        const INITIAL_UUV_DIVE_OFFSET = 8.0;
 
         const lakes = [];
 
@@ -1578,7 +1577,7 @@
         droneGroup.userData.frontLight = frontLight;
         droneGroup.userData.downLight = downLight;
         droneGroup.scale.set(0.38, 0.38, 0.38);
-        droneGroup.position.set(0, WATER_SURFACE_Y - INITIAL_UUV_DIVE_OFFSET, 0);
+        droneGroup.position.set(0, WATER_SURFACE_Y, 0);
         scene.add(droneGroup);
 
         // --- Yunzhou USV + sourced robot/drone integration ---
@@ -2134,7 +2133,7 @@
             const arm = createSO101DeckArm();
             arm.position.copy(usv.userData.markers.armBase);
             arm.rotation.y = -Math.PI / 2;
-            arm.scale.setScalar(1.25);
+            arm.scale.setScalar(1.08);
             if (arm.userData.applyPose) {
                 arm.userData.applyPose({ yaw: 0, shoulder: -1.05, elbow: 2.05, wrist: -1.0, gripper: 0.25 });
             }
@@ -2938,10 +2937,10 @@
         // Device initial position: from loaded data or from Pollution Cluster 2
         if (worldState.deviceInitialPosition) {
             const d = worldState.deviceInitialPosition;
-            droneGroup.position.set(d.x, d.y - INITIAL_UUV_DIVE_OFFSET, d.z);
+            droneGroup.position.set(d.x, WATER_SURFACE_Y + getSurfaceWave(d.x, d.z, 0.0), d.z);
             droneGroup.rotation.y = typeof d.rotationY === 'number' ? d.rotationY : droneGroup.rotation.y;
         } else if (worldState.pollutionClusters.length > 1) {
-            droneGroup.position.set(-240, WATER_SURFACE_Y - INITIAL_UUV_DIVE_OFFSET, 180);
+            droneGroup.position.set(-240, WATER_SURFACE_Y + getSurfaceWave(-240, 180, 0.0), 180);
             droneGroup.rotation.y = -0.65;
         }
         if (yunzhouDemo) {
@@ -3265,7 +3264,7 @@
             uiRefs.speed.innerText = velocity.length().toFixed(1) + " m/s";
 
             if(viewMode==='FPV'){
-                const off = new THREE.Vector3(0,45,128).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
+                const off = new THREE.Vector3(0,34,92).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
                 const la = new THREE.Vector3(0,4,-12).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
                 camera.position.lerp(droneGroup.position.clone().add(off),0.1);
                 camera.lookAt(droneGroup.position.clone().add(la));
