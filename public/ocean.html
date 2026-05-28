@@ -548,8 +548,8 @@
 
         <div class="ui-label" style="margin-top: 10px; margin-bottom: 5px;">视角</div>
         <div class="btn-group">
-            <button id="btn-orbit" class="mode-btn active">环绕</button>
-            <button id="btn-fpv" class="mode-btn">跟随</button>
+            <button id="btn-orbit" class="mode-btn">环绕</button>
+            <button id="btn-fpv" class="mode-btn active">跟随</button>
         </div>
 
     </div>
@@ -2756,8 +2756,8 @@
             if (mode === 'ORBIT') { btnOrbit.classList.add('active'); btnFPV.classList.remove('active'); controls.enabled = true; }
             else { btnOrbit.classList.remove('active'); btnFPV.classList.add('active'); controls.enabled = false; }
         }
-        // Initialize view mode to orbit.
-        setViewMode('ORBIT');
+        // Initialize view mode to follow.
+        setViewMode('FPV');
 
         btnOrbit.addEventListener('click', () => setViewMode('ORBIT'));
         btnFPV.addEventListener('click', () => setViewMode('FPV'));
