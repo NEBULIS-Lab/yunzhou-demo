@@ -747,6 +747,7 @@
         const MAX_ALT = 280.0;
         const REEF_FLOOR = -40.0;
         const WATER_SURFACE_Y = 170.0;
+        const USV_SURFACE_CLEARANCE = 3.0;
 
         const lakes = [];
 
@@ -1577,7 +1578,7 @@
         droneGroup.userData.frontLight = frontLight;
         droneGroup.userData.downLight = downLight;
         droneGroup.scale.set(0.38, 0.38, 0.38);
-        droneGroup.position.set(0, WATER_SURFACE_Y, 0);
+        droneGroup.position.set(0, WATER_SURFACE_Y + USV_SURFACE_CLEARANCE, 0);
         scene.add(droneGroup);
 
         // --- Yunzhou USV + sourced robot/drone integration ---
@@ -2133,7 +2134,7 @@
             const arm = createSO101DeckArm();
             arm.position.copy(usv.userData.markers.armBase);
             arm.rotation.y = -Math.PI / 2;
-            arm.scale.setScalar(1.08);
+            arm.scale.setScalar(0.95);
             if (arm.userData.applyPose) {
                 arm.userData.applyPose({ yaw: 0, shoulder: -1.05, elbow: 2.05, wrist: -1.0, gripper: 0.25 });
             }
@@ -2937,10 +2938,10 @@
         // Device initial position: from loaded data or from Pollution Cluster 2
         if (worldState.deviceInitialPosition) {
             const d = worldState.deviceInitialPosition;
-            droneGroup.position.set(d.x, WATER_SURFACE_Y + getSurfaceWave(d.x, d.z, 0.0), d.z);
+            droneGroup.position.set(d.x, WATER_SURFACE_Y + getSurfaceWave(d.x, d.z, 0.0) + USV_SURFACE_CLEARANCE, d.z);
             droneGroup.rotation.y = typeof d.rotationY === 'number' ? d.rotationY : droneGroup.rotation.y;
         } else if (worldState.pollutionClusters.length > 1) {
-            droneGroup.position.set(-240, WATER_SURFACE_Y + getSurfaceWave(-240, 180, 0.0), 180);
+            droneGroup.position.set(-240, WATER_SURFACE_Y + getSurfaceWave(-240, 180, 0.0) + USV_SURFACE_CLEARANCE, 180);
             droneGroup.rotation.y = -0.65;
         }
         if (yunzhouDemo) {
@@ -3237,10 +3238,16 @@
                 droneGroup.position.y=Math.max(droneGroup.position.y,h+1.5); velocity.y=0; col=true;
             }else droneGroup.position.y+=velocity.y*dt;
 
-            // Surface cap: allow floating on surface, but do not allow leaving the water
+            // Surface cap: keep the USV visibly floating on the wave surface until the user dives.
             const surfaceY = WATER_SURFACE_Y + getSurfaceWave(droneGroup.position.x, droneGroup.position.z, time);
-            if (droneGroup.position.y > surfaceY) {
-                droneGroup.position.y = surfaceY;
+            const surfaceFloatY = droneGroup.userData.isYunzhouUSV ? surfaceY + USV_SURFACE_CLEARANCE : surfaceY;
+            if (droneGroup.userData.isYunzhouUSV && !keys.ArrowDown && droneGroup.position.y > surfaceY - 6) {
+                droneGroup.position.y = THREE.MathUtils.lerp(droneGroup.position.y, surfaceFloatY, 0.18);
+                if (Math.abs(droneGroup.position.y - surfaceFloatY) < 0.18) droneGroup.position.y = surfaceFloatY;
+                if (velocity.y > -0.5) velocity.y = 0;
+            }
+            if (droneGroup.position.y > surfaceFloatY) {
+                droneGroup.position.y = surfaceFloatY;
                 if (velocity.y > 0) velocity.y = 0;
             }
             if (droneGroup.userData.isYunzhouUSV) {
@@ -3264,7 +3271,7 @@
             uiRefs.speed.innerText = velocity.length().toFixed(1) + " m/s";
 
             if(viewMode==='FPV'){
-                const off = new THREE.Vector3(0,34,92).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
+                const off = new THREE.Vector3(0,28,76).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
                 const la = new THREE.Vector3(0,4,-12).applyAxisAngle(new THREE.Vector3(0,1,0),droneGroup.rotation.y);
                 camera.position.lerp(droneGroup.position.clone().add(off),0.1);
                 camera.lookAt(droneGroup.position.clone().add(la));
