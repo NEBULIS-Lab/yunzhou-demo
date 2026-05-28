@@ -142,25 +142,6 @@
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        #btn-snapshot {
-            width: 100%;
-            margin-top: 8px;
-            background: #333;
-            color: #fff;
-        }
-        #btn-snapshot:hover { background: #555; }
-        #btn-snapshot:active { background: #000; }
-
-        /* Action Buttons (lower saturation, purple/black stay as-is) */
-        #btn-export {
-            background: #6b8f8a; color: white;
-        }
-        #btn-import {
-            background: #7a9fb5; color: white;
-        }
-        #btn-reset {
-            background: #b87070; color: white; margin-top: 5px; width: 100%;
-        }
         #top-right-backdrop {
             position: absolute;
             top: 16px;
@@ -186,9 +167,6 @@
             display: block;
             object-fit: contain;
         }
-
-        /* Hidden file input */
-        #file-input { display: none; }
 
         /* 3D Floating Labels */
         #labels-container {
@@ -574,14 +552,6 @@
             <button id="btn-fpv" class="mode-btn active">跟随</button>
         </div>
 
-        <div class="ui-label" style="margin-top: 10px; margin-bottom: 5px;">数据管理</div>
-        <button id="btn-snapshot" class="mode-btn">保存截图 (PNG)</button>
-        <div class="btn-group">
-            <button id="btn-export" class="mode-btn">导出数据</button>
-            <button id="btn-import" class="mode-btn">导入数据</button>
-        </div>
-        <button id="btn-reset" class="mode-btn">重置场景</button>
-        <input type="file" id="file-input" accept=".json">
     </div>
 
     <div id="labels-container"></div>
@@ -599,9 +569,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
-    <!-- html2canvas for capturing DOM elements -->
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-
     <script>
         // --- 0. Data Management System ---
 
@@ -2780,11 +2747,6 @@
         let viewMode = 'FPV';
         const btnOrbit = document.getElementById('btn-orbit');
         const btnFPV = document.getElementById('btn-fpv');
-        const btnSnap = document.getElementById('btn-snapshot');
-        const btnExport = document.getElementById('btn-export');
-        const btnImport = document.getElementById('btn-import');
-        const btnReset = document.getElementById('btn-reset');
-        const fileInput = document.getElementById('file-input');
         const batVal = document.getElementById('battery-val');
         const batBar = document.getElementById('battery-bar');
         const fogDensityControl = document.getElementById('fog-density-control');
@@ -2809,109 +2771,6 @@
                 fogUserDensity = parseFloat(e.target.value);
             });
         }
-
-        btnSnap.addEventListener('click', () => {
-            // Ensure all user labels are visible for snapshot
-            labels.forEach(l => {
-                const p = l.pos.clone(); p.project(camera);
-                const x = (p.x*.5+.5)*window.innerWidth;
-                const y = (p.y*-.5+.5)*window.innerHeight;
-                if(p.z<1 && x>0 && x<window.innerWidth && y>0 && y<window.innerHeight){
-                    l.el.style.display = 'block';
-                }
-            });
-            // Render first to ensure WebGL buffer is up to date
-            renderer.render(scene, camera);
-
-            // Use html2canvas to capture the entire body, which includes canvas + UI + labels
-            html2canvas(document.body, {
-                backgroundColor: null, // Use existing background
-                useCORS: true, // Allow cross-origin images if any
-                logging: false,
-                ignoreElements: (element) => {
-                    // Optional: ignore elements you don't want in the screenshot
-                    // e.g., ignore the welcome popup if it's hidden but technically there
-                    if (element.id === 'welcome-popup' || element.id === 'warning-msg') return true;
-                    return false;
-                }
-            }).then(canvas => {
-                const l = document.createElement('a');
-                l.download = 'sim_full_snapshot.png';
-                l.href = canvas.toDataURL();
-                l.click();
-            }).catch(err => {
-                console.error("Snapshot failed:", err);
-                alert("Snapshot failed to capture UI overlay.");
-            });
-        });
-
-        // --- Data Management Handlers ---
-        btnExport.addEventListener('click', () => {
-            // Terrain: sampled height map for reference (terrain is reproducible from seed)
-            const terrainMap = [];
-            const step = 10;
-            const half = MAP_HALF_SIZE;
-            for (let x = -half; x <= half; x += step) {
-                for (let z = -half; z <= half; z += step) {
-                    const h = getTerrainHeight(x, z);
-                    if (h > REEF_FLOOR - 6.0) terrainMap.push({ x: Math.round(x), z: Math.round(z), y: parseFloat(h.toFixed(1)) });
-                }
-            }
-            worldState.terrainMap = terrainMap;
-            worldState.dataVersion = DATA_VERSION;
-
-            // Device initial position (current UUV pose at export time)
-            worldState.deviceInitialPosition = {
-                x: droneGroup.position.x,
-                y: droneGroup.position.y,
-                z: droneGroup.position.z,
-                rotationY: droneGroup.rotation.y
-            };
-
-            // Fish schools: centers and motion params (activity range is global map + coast/deep logic in code)
-            worldState.fishSchools = fishSchools.map(s => ({
-                x: s.x, y: s.y, z: s.z,
-                heading: s.heading, speed: s.speed, phase: s.phase
-            }));
-
-            const dataStr = JSON.stringify(worldState);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const link = document.createElement('a');
-            link.setAttribute('href', dataUri);
-            link.setAttribute('download', 'oneocean_env_data.json');
-            link.click();
-        });
-
-        btnImport.addEventListener('click', () => fileInput.click());
-
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                try {
-                    const contents = ev.target.result;
-                    const parsed = JSON.parse(contents);
-                    if (!parsed || typeof parsed !== 'object') {
-                        alert("Invalid map data file.");
-                        return;
-                    }
-                    localStorage.setItem(STORAGE_KEY, contents);
-                    location.reload();
-                } catch (err) {
-                    console.error(err);
-                    alert("Error parsing file.");
-                }
-            };
-            reader.readAsText(file);
-        });
-
-        btnReset.addEventListener('click', () => {
-            if(confirm("Reset map? This will generate a new random world.")) {
-                localStorage.removeItem(STORAGE_KEY);
-                location.reload();
-            }
-        });
 
         // --- Pollution Targets & Labels ---
         const labelContainer = document.getElementById('labels-container');
