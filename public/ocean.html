@@ -186,35 +186,6 @@
             display: block;
             object-fit: contain;
         }
-        #btn-results {
-            position: absolute;
-            top: 22px;
-            right: 20px;
-            z-index: 200;
-            padding: 10px 20px;
-            background: #136f7d;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-family: Verdana, Geneva, sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-        #btn-results.active {
-            background: #b95b31;
-        }
-        #task-select {
-            width: 100%;
-            margin-top: 6px;
-            padding: 7px 8px;
-            border: 1px solid #bbb;
-            border-radius: 4px;
-            background: #fff;
-            color: #333;
-            font-size: 11px;
-            font-family: Verdana, Geneva, sans-serif;
-        }
 
         /* Hidden file input */
         #file-input { display: none; }
@@ -451,7 +422,7 @@
             <h2>云洲无人艇海洋环境演示</h2>
 
             <p>本页面保留 OneOcean 的高细节海洋场景，用于展示云洲无人艇、无人机和机械臂协同作业。</p>
-            <p><span class="oneocean-highlight">机械臂部分改为接入 noah-wardlow 的 MuJoCo/React 真实模型，不再使用手写简化模型。</span></p>
+            <p><span class="oneocean-highlight">机械臂窗口使用 MuJoCo/React 真实模型，场景中保留艇载机械臂外观用于整体展示。</span></p>
             <p>无人艇基础控制：</p>
 
             <div class="controls-info">
@@ -517,20 +488,11 @@
 
         <div class="divider"></div>
 
-        <div class="section-title">任务展示</div>
+        <div class="section-title">下潜控制</div>
         <div class="ui-row">
-            <span class="ui-label">当前任务:</span>
-            <span class="ui-value" id="yunzhou-task-state">待命</span>
+            <span class="ui-label">控制:</span>
+            <span class="ui-value">↑ 上浮 / ↓ 下潜</span>
         </div>
-        <div class="ui-row">
-            <span class="ui-label">任务进度:</span>
-            <span class="ui-value" id="yunzhou-task-progress">0%</span>
-        </div>
-        <select id="task-select">
-            <option value="platform">任务1：平台抓放</option>
-            <option value="dive">任务2：回收下潜</option>
-            <option value="patrol">任务3：水面巡航抓放</option>
-        </select>
 
         <div class="section-title">无人艇姿态</div>
         <div class="ui-row">
@@ -625,7 +587,7 @@
     <div id="labels-container"></div>
 
     <div id="instructions">
-        W/S 前进/后退 | A/D 横移 | ←/→ 转向 | 当前阶段先关闭任务展示入口
+        W/S 前进/后退 | A/D 横移 | ←/→ 转向 | ↑ 上浮 | ↓ 下潜
     </div>
 
     <div id="dive-hint"></div>
@@ -634,8 +596,6 @@
 
     <div id="top-right-backdrop"></div>
     <div id="top-brand"><img src="example/logo.png" alt="OneOcean logo"></div>
-    <button id="btn-results">启动任务展示</button>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
@@ -1656,7 +1616,7 @@
 
         // --- Yunzhou USV + sourced robot/drone integration ---
         // Keeps the original Ocean demo world intact. Only the active vehicle model is replaced.
-        // Robotic arm runtime: React/MuJoCo panel from noah-wardlow__mujoco-react-example.
+        // Robotic arm runtime is provided by the React/MuJoCo panel.
         // Active drone geometry: OlivierB-OB__osm-drone-simulator.
         const yunzhouDemo = installYunzhouDemo();
 
@@ -2204,9 +2164,14 @@
             droneGroup.add(usv);
             droneGroup.userData.usv = usv;
 
-            const arm = new THREE.Group();
-            arm.userData.applyPose = () => {};
-            arm.userData.getToolWorldPosition = () => yzWorldFromLocal(usv, usv.userData.markers.armBase);
+            const arm = createSO101DeckArm();
+            arm.position.copy(usv.userData.markers.armBase);
+            arm.rotation.y = -Math.PI / 2;
+            arm.scale.setScalar(1.25);
+            if (arm.userData.applyPose) {
+                arm.userData.applyPose({ yaw: 0.32, shoulder: 0.22, elbow: -0.82, wrist: 0.34, gripper: 0.72 });
+            }
+            usv.add(arm);
 
             const platform = new THREE.Group();
             const platformMat = yzMaterial(0x596f64, 0.7, 0.05);
@@ -2226,8 +2191,8 @@
             const objects = {
                 blueSample: { mesh: createBottle(0x4cb9f4), from: 'platformBlue', to: 'coldBin', status: '平台待取' },
                 greenSample: { mesh: createBottle(0x56d481), from: 'platformGreen', to: 'platformGreen', status: '干扰目标' },
-                sensorModule: { mesh: createSensorBox(), from: 'sensorTray', to: 'deployPad', status: '甲板待部署' },
-                patrolPayload: { mesh: createBottle(0xffb347), from: 'recoveryBin', to: 'waterDrop', status: '巡航投放件' }
+                sensorModule: { mesh: createSensorBox(), from: 'sensorTray', to: 'deployPad', status: '甲板设备' },
+                deckPayload: { mesh: createBottle(0xffb347), from: 'recoveryBin', to: 'recoveryBin', status: '甲板载荷' }
             };
             Object.values(objects).forEach((obj) => scene.add(obj.mesh));
 
@@ -2243,21 +2208,12 @@
                 platform,
                 objects,
                 drones,
-                taskStarted: false,
-                taskMode: 'idle',
-                taskTime: 0,
-                taskDuration: 0,
-                inputLocked: false,
-                holdUnderwater: false,
                 homePosition: droneGroup.position.clone(),
                 homeRotationY: droneGroup.rotation.y,
-                missionStart: droneGroup.position.clone(),
-                missionStartRotY: droneGroup.rotation.y,
                 armJoints: [0, -0.55, 0, -2.0, 0, 1.55, 0.78],
                 armGripper: 255,
-                lastMissionBroadcast: 0,
                 sourceNotes: [
-                    'arm:noah-wardlow__mujoco-react-example',
+                    'arm:MuJoCo/React panel + deck visual arm',
                     'drone:OlivierB-OB__osm-drone-simulator'
                 ]
             };
@@ -2266,12 +2222,6 @@
         function yzWorldFromLocal(root, local) {
             return root.localToWorld(local.clone());
         }
-
-        const YUNZHOU_TASKS = {
-            platform: { label: '任务1：平台抓放', duration: 34 },
-            dive: { label: '任务2：回收下潜', duration: 22 },
-            patrol: { label: '任务3：水面巡航抓放', duration: 30 }
-        };
 
         function yzClamp01(v) {
             return Math.max(0, Math.min(1, v));
@@ -2342,63 +2292,7 @@
             yzSetArmJoints(demo, pose, gripper);
         }
 
-        function yzUpdateTaskButton(demo) {
-            const btn = document.getElementById('btn-results');
-            if (!btn) return;
-            const selected = document.getElementById('task-select');
-            const key = selected ? selected.value : 'platform';
-            if (demo.taskStarted) {
-                btn.textContent = '停止任务展示';
-                btn.classList.add('active');
-            } else {
-                btn.textContent = `启动${YUNZHOU_TASKS[key].label}`;
-                btn.classList.remove('active');
-            }
-        }
-
-        function startYunzhouTask(demo, taskKey) {
-            const task = YUNZHOU_TASKS[taskKey] || YUNZHOU_TASKS.platform;
-            demo.taskStarted = true;
-            demo.taskMode = taskKey;
-            demo.taskTime = 0;
-            demo.taskDuration = task.duration;
-            demo.inputLocked = true;
-            demo.holdUnderwater = false;
-            demo.patrolDropPosition = null;
-            demo.missionStart = (demo.homePosition || droneGroup.position).clone();
-            demo.missionStartRotY = demo.homeRotationY || droneGroup.rotation.y;
-
-            const y = yzSurfaceY(demo.missionStart.x, demo.missionStart.z, clock.getElapsedTime());
-            demo.missionStart.y = y;
-            droneGroup.position.set(demo.missionStart.x, y, demo.missionStart.z);
-            droneGroup.rotation.set(0, demo.missionStartRotY, 0);
-            velocity.set(0, 0, 0);
-
-            demo.objects.blueSample.status = '平台待取';
-            demo.objects.sensorModule.status = '甲板待部署';
-            demo.objects.patrolPayload.status = '巡航待投放';
-            yzArmPoseForStage(demo, 'stowed', 0);
-            yzUpdateTaskButton(demo);
-        }
-
-        function stopYunzhouTask(demo, completed) {
-            if (demo.taskMode === 'dive' && completed) {
-                demo.holdUnderwater = true;
-            }
-            demo.taskStarted = false;
-            demo.inputLocked = false;
-            demo.taskTime = 0;
-            demo.taskDuration = 0;
-            demo.taskMode = demo.holdUnderwater ? 'diveHold' : 'idle';
-            yzUpdateTaskButton(demo);
-        }
-
-        function yzUpdateStatusPanel(demo, label, progress, time, surfaceY) {
-            const taskState = document.getElementById('yunzhou-task-state');
-            const taskProgress = document.getElementById('yunzhou-task-progress');
-            if (taskState) taskState.textContent = label;
-            if (taskProgress) taskProgress.textContent = `${Math.round(progress * 100)}%`;
-
+        function yzUpdateStatusPanel(demo, surfaceY) {
             const heading = document.getElementById('usv-heading-val');
             const attitude = document.getElementById('usv-attitude-val');
             const depth = document.getElementById('usv-depth-val');
@@ -2424,36 +2318,13 @@
                 if (el) el.textContent = `[${drone.position.x.toFixed(0)}, ${drone.position.y.toFixed(1)}, ${drone.position.z.toFixed(0)}]`;
             });
 
-            if (window.parent && window.parent !== window && time - demo.lastMissionBroadcast > 0.1) {
-                demo.lastMissionBroadcast = time;
-                window.parent.postMessage({
-                    type: 'yunzhou-mission-state',
-                    taskStarted: demo.taskStarted,
-                    taskMode: demo.taskMode,
-                    taskLabel: label,
-                    taskProgress: progress,
-                    armJoints: demo.armJoints,
-                    armGripper: demo.armGripper
-                }, '*');
-            }
         }
 
         function updateYunzhouDemo(demo, time, dt, surfaceY) {
             if (!demo) return;
             const waterYAt = (x, z) => yzSurfaceY(x, z, time);
-            const task = YUNZHOU_TASKS[demo.taskMode];
-            const missionActive = demo.taskStarted && task;
-            if (missionActive) {
-                demo.taskTime += dt;
-                if (demo.taskTime >= task.duration) {
-                    stopYunzhouTask(demo, true);
-                }
-            }
-
-            if (!demo.holdUnderwater && demo.taskMode !== 'dive') {
-                droneGroup.position.y = waterYAt(droneGroup.position.x, droneGroup.position.z);
-                velocity.y = 0;
-            }
+            const displayDepth = Math.max(0, waterYAt(droneGroup.position.x, droneGroup.position.z) - droneGroup.position.y);
+            const depthFactor = Math.max(0, 1 - displayDepth / 18);
 
             const dx = 9;
             const dz = 4;
@@ -2461,8 +2332,16 @@
             const waveBack = getSurfaceWave(droneGroup.position.x - dx, droneGroup.position.z, time);
             const waveLeft = getSurfaceWave(droneGroup.position.x, droneGroup.position.z - dz, time);
             const waveRight = getSurfaceWave(droneGroup.position.x, droneGroup.position.z + dz, time);
-            droneGroup.rotation.x = THREE.MathUtils.lerp(droneGroup.rotation.x, THREE.MathUtils.clamp((waveBack - waveForward) * 0.035, -0.08, 0.08), 0.08);
-            droneGroup.rotation.z = THREE.MathUtils.lerp(droneGroup.rotation.z, THREE.MathUtils.clamp((waveRight - waveLeft) * 0.045, -0.08, 0.08), 0.08);
+            droneGroup.rotation.x = THREE.MathUtils.lerp(
+                droneGroup.rotation.x,
+                THREE.MathUtils.clamp((waveBack - waveForward) * 0.035 * depthFactor, -0.08, 0.08),
+                0.08
+            );
+            droneGroup.rotation.z = THREE.MathUtils.lerp(
+                droneGroup.rotation.z,
+                THREE.MathUtils.clamp((waveRight - waveLeft) * 0.045 * depthFactor, -0.08, 0.08),
+                0.08
+            );
 
             demo.platform.position.y = WATER_SURFACE_Y + getSurfaceWave(demo.platform.position.x, demo.platform.position.z, time) - 0.12;
             demo.platform.rotation.x = Math.sin(time * 0.5) * 0.012;
@@ -2479,139 +2358,43 @@
                 recoveryBin: yzWorldFromLocal(demo.usv, demo.usv.userData.markers.recoveryBin)
             };
 
-            let taskLabel = demo.holdUnderwater ? '下潜悬停完成，可键盘控制' : '待命';
-            let progress = 0;
-            const t = demo.taskTime;
-            const missionStart = demo.missionStart || droneGroup.position;
-            const platformStandby = new THREE.Vector3(demo.platform.position.x - 18, waterYAt(demo.platform.position.x - 18, demo.platform.position.z + 8), demo.platform.position.z + 8);
-
-            if (demo.taskStarted && demo.taskMode === 'platform') {
-                progress = yzClamp01(t / YUNZHOU_TASKS.platform.duration);
-                if (t < 8) {
-                    const p = yzCarryPoint(missionStart, platformStandby, t / 8, 5);
-                    p.y = waterYAt(p.x, p.z);
-                    droneGroup.position.copy(p);
-                    droneGroup.rotation.y = yzLookYaw(droneGroup.position, demo.platform.position);
-                    taskLabel = '驶向漂浮作业平台';
-                    yzArmPoseForStage(demo, 'scan', t / 8);
-                } else if (t < 17) {
-                    droneGroup.position.copy(platformStandby);
-                    droneGroup.position.y = waterYAt(platformStandby.x, platformStandby.z);
-                    droneGroup.rotation.y = yzLookYaw(droneGroup.position, demo.platform.position);
-                    taskLabel = '回收平台蓝色采样瓶';
-                    yzArmPoseForStage(demo, t < 12 ? 'pick-platform' : 'place-deck', (t - 8) / 9);
-                } else if (t < 27) {
-                    taskLabel = '部署甲板传感器模块';
-                    yzArmPoseForStage(demo, 'deploy-water', (t - 17) / 10);
-                } else {
-                    taskLabel = '平台抓放任务完成验证';
-                    yzArmPoseForStage(demo, 'stowed', 1);
-                }
-            } else if (demo.taskStarted && demo.taskMode === 'dive') {
-                progress = yzClamp01(t / YUNZHOU_TASKS.dive.duration);
-                const start = missionStart.clone();
-                const diveTarget = new THREE.Vector3(start.x - 18, waterYAt(start.x, start.z) - 38, start.z - 16);
-                if (t < 5) {
-                    const p = start.clone();
-                    p.y = waterYAt(p.x, p.z);
-                    droneGroup.position.copy(p);
-                    taskLabel = '回收无人机并归零机械臂';
-                    yzArmPoseForStage(demo, 'stowed', 1);
-                } else if (t < 15) {
-                    const p = yzCarryPoint(start, diveTarget, (t - 5) / 10, -2);
-                    droneGroup.position.copy(p);
-                    taskLabel = '无人艇整体下潜';
-                    yzArmPoseForStage(demo, 'stowed', 1);
-                } else {
-                    droneGroup.position.lerp(diveTarget, 0.08);
-                    taskLabel = '水下悬停，等待接管';
-                    yzArmPoseForStage(demo, 'stowed', 1);
-                }
-                droneGroup.rotation.x = THREE.MathUtils.lerp(droneGroup.rotation.x, 0, 0.08);
-                droneGroup.rotation.z = THREE.MathUtils.lerp(droneGroup.rotation.z, 0, 0.08);
-            } else if (demo.taskStarted && demo.taskMode === 'patrol') {
-                progress = yzClamp01(t / YUNZHOU_TASKS.patrol.duration);
-                const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), demo.missionStartRotY || 0);
-                const rgt = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), demo.missionStartRotY || 0);
-                const patrolTarget = missionStart.clone().add(fwd.multiplyScalar(88)).add(rgt.multiplyScalar(18));
-                const p = yzCarryPoint(missionStart, patrolTarget, Math.min(t, 24) / 24, 2.5);
-                p.y = waterYAt(p.x, p.z);
-                droneGroup.position.copy(p);
-                droneGroup.rotation.y = (demo.missionStartRotY || 0) + Math.sin(t * 0.18) * 0.12;
-                taskLabel = t < 7 ? '水面巡航接近投放点' : (t < 17 ? '巡航中机械臂投放物体' : '巡航抓放完成');
-                yzArmPoseForStage(demo, t < 7 ? 'scan' : (t < 17 ? 'patrol-drop' : 'stowed'), yzClamp01((t - 7) / 10));
-            } else {
-                yzArmPoseForStage(demo, demo.holdUnderwater ? 'stowed' : 'scan', (Math.sin(time * 0.3) + 1) * 0.5);
+            const yaw = 0.26 + Math.sin(time * 0.22) * 0.12;
+            const shoulder = 0.22 + Math.sin(time * 0.18 + 0.4) * 0.05;
+            const elbow = -0.82 + Math.cos(time * 0.16) * 0.07;
+            const wrist = 0.34 + Math.sin(time * 0.2) * 0.06;
+            const gripper = 0.72;
+            if (demo.arm.userData.applyPose) {
+                demo.arm.userData.applyPose({ yaw, shoulder, elbow, wrist, gripper });
             }
+            demo.armJoints = [yaw, shoulder, 0, elbow, 0, wrist, 0];
+            demo.armGripper = gripper > 0.5 ? 255 : 0;
 
-            const waterDrop = demo.patrolDropPosition || droneGroup.position.clone().add(new THREE.Vector3(0, -1.0, -8).applyAxisAngle(new THREE.Vector3(0, 1, 0), droneGroup.rotation.y));
-            waterDrop.y = waterYAt(waterDrop.x, waterDrop.z) - 0.32;
             Object.entries(demo.objects).forEach(([id, obj]) => {
-                let target;
-                if (id === 'blueSample') {
-                    if (demo.taskMode === 'platform' && demo.taskStarted && t > 10 && t < 15.5) {
-                        target = yzCarryPoint(platformPoints.platformBlue, deckPoints.coldBin, (t - 10) / 5.5, 4.0);
-                        obj.status = '夹爪搬运中';
-                    } else if ((demo.taskMode === 'platform' && t >= 15.5) || obj.status === '已入冷藏箱') {
-                        target = deckPoints.coldBin;
-                        obj.status = '已入冷藏箱';
-                    } else {
-                        target = platformPoints.platformBlue;
-                    }
-                } else if (id === 'sensorModule') {
-                    if (demo.taskMode === 'platform' && demo.taskStarted && t > 18 && t < 25) {
-                        target = yzCarryPoint(deckPoints.sensorTray, platformPoints.deployPad, (t - 18) / 7, 3.5);
-                        obj.status = '夹爪部署中';
-                    } else if ((demo.taskMode === 'platform' && t >= 25) || obj.status === '已部署') {
-                        target = platformPoints.deployPad;
-                        obj.status = '已部署';
-                    } else {
-                        target = deckPoints.sensorTray;
-                    }
-                } else if (id === 'patrolPayload') {
-                    if (demo.taskMode === 'patrol' && demo.taskStarted && t > 8 && t < 15) {
-                        target = yzCarryPoint(deckPoints.recoveryBin, waterDrop, (t - 8) / 7, 3.0);
-                        obj.status = '巡航投放中';
-                    } else if ((demo.taskMode === 'patrol' && t >= 15) || obj.status === '已投放') {
-                        if (!demo.patrolDropPosition) demo.patrolDropPosition = waterDrop.clone();
-                        target = demo.patrolDropPosition;
-                        obj.status = '已投放';
-                    } else {
-                        target = deckPoints.recoveryBin;
-                    }
-                } else if (deckPoints[obj.from]) {
-                    target = deckPoints[obj.from];
-                } else {
-                    target = platformPoints[obj.from];
-                }
+                let target = deckPoints[obj.from] || platformPoints[obj.from] || deckPoints.recoveryBin;
                 yzSetObject(obj, target);
-                obj.mesh.rotation.y += dt * 0.35;
+                obj.mesh.rotation.y += dt * 0.25;
+                if (id === 'blueSample' || id === 'greenSample') obj.mesh.rotation.x = Math.sin(time * 0.8) * 0.04;
             });
 
+            const droneSurfaceY = waterYAt(droneGroup.position.x, droneGroup.position.z);
             const droneTargets = [
-                new THREE.Vector3(droneGroup.position.x + 8.8 + Math.sin(time * 0.62) * 2.6, surfaceY + 10.5 + Math.sin(time * 1.2) * 0.3, droneGroup.position.z - 7.8 + Math.cos(time * 0.62) * 1.2),
-                new THREE.Vector3(droneGroup.position.x - 8.6 + Math.sin(time * 0.48) * 1.5, surfaceY + 12.5 + Math.sin(time * 1.0) * 0.25, droneGroup.position.z + 1.6),
-                new THREE.Vector3(droneGroup.position.x + 2.8 + Math.cos(time * 0.55) * 1.6, surfaceY + 9.2 + Math.sin(time * 1.3) * 0.25, droneGroup.position.z + 8.4 + Math.sin(time * 0.55) * 1.2)
-            ];
-            const padTargets = [
-                yzWorldFromLocal(demo.usv, demo.usv.userData.markers.dronePad1).add(new THREE.Vector3(0, 0.55, 0)),
-                yzWorldFromLocal(demo.usv, demo.usv.userData.markers.dronePad2).add(new THREE.Vector3(0, 0.55, 0)),
-                yzWorldFromLocal(demo.usv, demo.usv.userData.markers.dronePad3).add(new THREE.Vector3(0, 0.55, 0))
+                new THREE.Vector3(droneGroup.position.x + 8.8 + Math.sin(time * 0.62) * 2.2, droneSurfaceY + 10.5, droneGroup.position.z - 7.8 + Math.cos(time * 0.62) * 1.0),
+                new THREE.Vector3(droneGroup.position.x - 8.6 + Math.sin(time * 0.48) * 1.3, droneSurfaceY + 12.2, droneGroup.position.z + 1.6),
+                new THREE.Vector3(droneGroup.position.x + 2.8 + Math.cos(time * 0.55) * 1.4, droneSurfaceY + 9.4, droneGroup.position.z + 8.4 + Math.sin(time * 0.55) * 1.0)
             ];
             demo.drones.forEach((drone, index) => {
                 const prev = drone.position.clone();
-                const target = (demo.taskMode === 'dive' || demo.holdUnderwater) ? padTargets[index] : droneTargets[index];
-                drone.position.lerp(target, 1 - Math.pow(0.02, dt));
+                drone.position.lerp(droneTargets[index], 1 - Math.pow(0.02, dt));
                 const delta = drone.position.clone().sub(prev);
-                if (delta.lengthSq() > 0.0001) {
-                    drone.rotation.y = Math.atan2(delta.x, delta.z);
-                }
+                if (delta.lengthSq() > 0.0001) drone.rotation.y = Math.atan2(delta.x, delta.z);
                 drone.rotation.x = 0;
                 drone.rotation.z = 0;
                 drone.userData.visuals.rotation.x = 0;
                 drone.userData.visuals.rotation.z = Math.sin(time * 1.1 + index) * 0.035;
             });
-            yzUpdateStatusPanel(demo, taskLabel, progress, time, waterYAt(droneGroup.position.x, droneGroup.position.z));
+
+            yzUpdateStatusPanel(demo, waterYAt(droneGroup.position.x, droneGroup.position.z));
+            return;
         }
 
         // --- PID Controller Class ---
@@ -3305,15 +3088,12 @@
         if (yunzhouDemo) {
             yunzhouDemo.homePosition = droneGroup.position.clone();
             yunzhouDemo.homeRotationY = droneGroup.rotation.y;
-            yunzhouDemo.missionStart = droneGroup.position.clone();
-            yunzhouDemo.missionStartRotY = droneGroup.rotation.y;
-            const platformOffset = new THREE.Vector3(42, 0, -34).applyAxisAngle(new THREE.Vector3(0, 1, 0), droneGroup.rotation.y);
+            const platformOffset = new THREE.Vector3(24, 0, -16).applyAxisAngle(new THREE.Vector3(0, 1, 0), droneGroup.rotation.y);
             yunzhouDemo.platform.position.set(
                 droneGroup.position.x + platformOffset.x,
                 WATER_SURFACE_Y,
                 droneGroup.position.z + platformOffset.z
             );
-            yzUpdateTaskButton(yunzhouDemo);
         }
 
         const fishPositionsLoaded = Array.isArray(worldState.fishSchools) && worldState.fishSchools.length === fishSchools.length;
@@ -3433,9 +3213,6 @@
             requestAnimationFrame(animate);
             const dt = Math.min(clock.getDelta(), 0.1);
             const time = clock.getElapsedTime();
-            if (yunzhouDemo && yunzhouDemo.inputLocked) {
-                Object.keys(keys).forEach((key) => { keys[key] = false; });
-            }
 
             skyGroup.position.copy(camera.position);
             skyUniforms.time.value = time;
@@ -3813,23 +3590,6 @@
                 welcomePopup.classList.add('hidden');
             }
         });
-
-        const taskSelect = document.getElementById('task-select');
-        if (taskSelect) {
-            taskSelect.addEventListener('change', () => yzUpdateTaskButton(yunzhouDemo));
-        }
-        const btnResults = document.getElementById('btn-results');
-        if (btnResults) {
-            yzUpdateTaskButton(yunzhouDemo);
-            btnResults.onclick = () => {
-                if (yunzhouDemo.taskStarted) {
-                    stopYunzhouTask(yunzhouDemo, false);
-                    return;
-                }
-                const taskKey = taskSelect ? taskSelect.value : 'platform';
-                startYunzhouTask(yunzhouDemo, taskKey);
-            };
-        }
 
         animate();
     </script>

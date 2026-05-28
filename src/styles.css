@@ -112,13 +112,6 @@ input {
   font-size: 11px;
 }
 
-.mission-state {
-  margin-left: auto;
-  color: #e7f8fb;
-  font-size: 11px;
-  font-weight: 700;
-}
-
 .toolbar-controls {
   display: flex;
   align-items: center;
