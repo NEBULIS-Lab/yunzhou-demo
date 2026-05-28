@@ -4,8 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="example/logo.png">
-    <title>Yunzhou USV Manipulation Demo</title>
+    <title>云洲无人艇机械臂海洋作业演示</title>
     <style>
+        #welcome-popup,
+        #dive-hint,
+        #btn-results,
+        #top-right-backdrop,
+        #top-brand {
+            display: none !important;
+        }
+
         body {
             margin: 0;
             overflow: hidden;
@@ -465,15 +473,15 @@
     <div id="canvas-container"></div>
 
     <div id="ui-panel">
-        <div class="ui-header">Yunzhou USV Manipulation Demo</div>
+        <div class="ui-header">云洲无人艇机械臂海洋作业演示</div>
         
         <!-- Status -->
         <div class="ui-row">
-            <span class="ui-label">USV_STATE:</span>
-            <span class="ui-value status-green" id="agent-state">STABLE</span>
+            <span class="ui-label">无人艇状态:</span>
+            <span class="ui-value status-green" id="agent-state">稳定</span>
         </div>
         <div class="ui-row">
-            <span class="ui-label">BATTERY:</span>
+            <span class="ui-label">电量:</span>
             <span class="ui-value" id="battery-val">100%</span>
         </div>
         <div id="battery-container">
@@ -483,83 +491,83 @@
         <div class="divider"></div>
 
         <div class="ui-row">
-            <span class="ui-label">POSITION:</span>
+            <span class="ui-label">位置:</span>
             <span class="ui-value" id="pos-val">0, 100, 0</span>
         </div>
         <div class="ui-row">
-            <span class="ui-label">SPEED:</span>
+            <span class="ui-label">速度:</span>
             <span class="ui-value" id="speed-val">0.0 m/s</span>
         </div>
 
         <!-- Env Vars -->
-        <div class="section-title">ENVIRONMENT</div>
+        <div class="section-title">海洋环境</div>
         <div class="ui-row">
-            <span class="ui-label">TEMPERATURE:</span>
+            <span class="ui-label">温度:</span>
             <span class="ui-value" id="temp-val">— °C</span>
         </div>
         <div class="ui-row">
-            <span class="ui-label">SALINITY:</span>
+            <span class="ui-label">盐度:</span>
             <span class="ui-value" id="salinity-val">— (1e-3)</span>
         </div>
         <div class="ui-row">
-            <span class="ui-label">CURRENT:</span>
+            <span class="ui-label">海流:</span>
             <span class="ui-value" id="wind-val">4.2 m/s NW</span>
         </div>
         <div class="ui-row">
-            <span class="ui-label">EASTWARD VELOCITY:</span>
+            <span class="ui-label">东向流速:</span>
             <span class="ui-value" id="east-vel-val">— m/s</span>
         </div>
         <div class="ui-row">
-            <span class="ui-label">NORTHWARD VELOCITY:</span>
+            <span class="ui-label">北向流速:</span>
             <span class="ui-value" id="north-vel-val">— m/s</span>
         </div>
         <div class="disclaimer">
-            <span class="legend-dot"></span> Cyan particles visualize ocean currents
+            <span class="legend-dot"></span> 青色粒子表示海流方向与强度
         </div>
         <div class="ui-row" style="margin-top: 5px;">
-            <span class="ui-label">FOG:</span>
+            <span class="ui-label">雾效:</span>
             <input type="range" id="fog-density-control" min="0" max="0.02" step="0.0005" value="0" style="width: 70px;">
         </div>
 
         <div class="divider"></div>
 
-        <div class="section-title">OCEAN TARGETS</div>
+        <div class="section-title">海上目标</div>
         <div id="user-list">
             <!-- Populated via JS -->
         </div>
 
-        <div class="section-title" style="margin-top:8px;">FISH SCHOOLS</div>
+        <div class="section-title" style="margin-top:8px;">鱼群</div>
         <div id="fish-list">
             <!-- Populated via JS -->
         </div>
 
         <div class="divider"></div>
 
-        <div class="ui-label" style="margin-top: 10px; margin-bottom: 5px;">CAMERA</div>
+        <div class="ui-label" style="margin-top: 10px; margin-bottom: 5px;">视角</div>
         <div class="btn-group">
-            <button id="btn-orbit" class="mode-btn">ORBIT</button>
-            <button id="btn-fpv" class="mode-btn active">FPV</button>
+            <button id="btn-orbit" class="mode-btn">环绕</button>
+            <button id="btn-fpv" class="mode-btn active">跟随</button>
         </div>
         
-        <div class="ui-label" style="margin-top: 10px; margin-bottom: 5px;">DATA MANAGEMENT</div>
-        <button id="btn-snapshot" class="mode-btn">SNAPSHOT (PNG)</button>
+        <div class="ui-label" style="margin-top: 10px; margin-bottom: 5px;">数据管理</div>
+        <button id="btn-snapshot" class="mode-btn">保存截图 (PNG)</button>
         <div class="btn-group">
-            <button id="btn-export" class="mode-btn">EXPORT DATA</button>
-            <button id="btn-import" class="mode-btn">IMPORT DATA</button>
+            <button id="btn-export" class="mode-btn">导出数据</button>
+            <button id="btn-import" class="mode-btn">导入数据</button>
         </div>
-        <button id="btn-reset" class="mode-btn">RESET & NEW MAP</button>
+        <button id="btn-reset" class="mode-btn">重置场景</button>
         <input type="file" id="file-input" accept=".json">
     </div>
 
     <div id="labels-container"></div>
 
     <div id="instructions">
-        W/S: Surge (Fwd/Back) | A/D: Sway (Left/Right) | ←/→: Yaw | Arm and drones run as an autonomous deck task
+        W/S 前进/后退 | A/D 横移 | ←/→ 转向 | 当前阶段先关闭任务展示入口
     </div>
 
     <div id="dive-hint">USV is holding station at the water surface</div>
 
-    <div id="warning-msg">COLLISION DETECTED</div>
+    <div id="warning-msg">检测到碰撞</div>
 
     <div id="top-right-backdrop"></div>
     <div id="top-brand"><img src="example/logo.png" alt="OneOcean logo"></div>
@@ -1739,19 +1747,22 @@
             tray.position.set(-2.65, 1.14, -0.92);
             usv.add(tray);
 
-            const portText = yzMakeTextPanel('YUNZHOU USV');
+            const portText = yzMakeTextPanel('云洲无人艇');
             portText.position.set(-0.1, 0.74, -1.77);
             portText.rotation.y = Math.PI;
             usv.add(portText);
-            const starboardText = yzMakeTextPanel('YZ-MANIP');
+            const starboardText = yzMakeTextPanel('海上作业平台');
             starboardText.position.set(-0.1, 0.74, 1.77);
             usv.add(starboardText);
 
             usv.userData.markers = {
-                armBase: new THREE.Vector3(-1.15, 1.18, -0.72),
-                sensorTray: new THREE.Vector3(-2.65, 1.45, -0.92),
-                coldBin: new THREE.Vector3(-3.9, 1.72, 0.82),
-                recoveryBin: new THREE.Vector3(-5.05, 1.72, -0.82)
+                armBase: new THREE.Vector3(-1.15, 1.08, -0.72),
+                sensorTray: new THREE.Vector3(-2.65, 1.21, -0.92),
+                coldBin: new THREE.Vector3(-3.9, 1.56, 0.82),
+                recoveryBin: new THREE.Vector3(-5.05, 1.56, -0.82),
+                dronePad1: new THREE.Vector3(-3.25, 1.3, 0.12),
+                dronePad2: new THREE.Vector3(-4.12, 1.3, 0.12),
+                dronePad3: new THREE.Vector3(-4.99, 1.3, 0.12)
             };
             return usv;
         }
@@ -1885,6 +1896,110 @@
             return arm_group;
         }
 
+        function createSO101DeckArm() {
+            // Visual structure adapted from:
+            // - RamazanOzdemir__robot-arm-viz/src/features/robot-arm/components/*
+            // - google-deepmind__mujoco_menagerie/robotstudio_so101/so101.xml
+            // It keeps the SO101 yellow/black product styling but is built as native Three.js
+            // so it can be mounted directly inside the Ocean demo without adding MuJoCo runtime.
+            const arm = new THREE.Group();
+            const yellow = yzMaterial(0xffd12f, 0.34, 0.48);
+            const black = yzMaterial(0x101417, 0.5, 0.25);
+            const grey = yzMaterial(0xd8dee0, 0.32, 0.45);
+            const darkGrey = yzMaterial(0x3f484c, 0.48, 0.28);
+
+            const base = yzShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.58, 0.32, 36), darkGrey));
+            base.position.y = 0.16;
+            arm.add(base);
+
+            const yaw = new THREE.Group();
+            yaw.position.y = 0.34;
+            arm.add(yaw);
+
+            const pedestal = yzShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.35, 32), yellow));
+            pedestal.position.y = 0.18;
+            yaw.add(pedestal);
+
+            const shoulder = new THREE.Group();
+            shoulder.position.y = 0.42;
+            yaw.add(shoulder);
+            const shoulderJoint = yzShadow(new THREE.Mesh(new THREE.SphereGeometry(0.28, 24, 18), grey));
+            shoulder.add(shoulderJoint);
+
+            const upper = new THREE.Group();
+            upper.position.y = 0;
+            shoulder.add(upper);
+            const upperLink = yzShadow(new THREE.Mesh(new THREE.BoxGeometry(0.34, 1.95, 0.34), yellow));
+            upperLink.position.y = 0.98;
+            upper.add(upperLink);
+            const upperCable = yzShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.78, 10), black));
+            upperCable.position.set(0.22, 0.98, 0.22);
+            upper.add(upperCable);
+
+            const elbow = new THREE.Group();
+            elbow.position.y = 1.95;
+            upper.add(elbow);
+            const elbowJoint = yzShadow(new THREE.Mesh(new THREE.SphereGeometry(0.25, 24, 18), grey));
+            elbow.add(elbowJoint);
+
+            const lower = new THREE.Group();
+            elbow.add(lower);
+            const lowerLink = yzShadow(new THREE.Mesh(new THREE.BoxGeometry(0.28, 1.6, 0.28), yellow));
+            lowerLink.position.y = 0.8;
+            lower.add(lowerLink);
+            const lowerBrace = yzShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1.42, 12), black));
+            lowerBrace.position.set(-0.2, 0.82, -0.18);
+            lower.add(lowerBrace);
+
+            const wrist = new THREE.Group();
+            wrist.position.y = 1.6;
+            lower.add(wrist);
+            const wristJoint = yzShadow(new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 14), grey));
+            wrist.add(wristJoint);
+            const wristRoll = yzShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.44, 22), darkGrey));
+            wristRoll.rotation.x = Math.PI / 2;
+            wristRoll.position.y = 0.22;
+            wrist.add(wristRoll);
+
+            const tool = new THREE.Group();
+            tool.position.y = 0.48;
+            wrist.add(tool);
+            const palm = yzShadow(new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.16, 0.26), darkGrey));
+            palm.position.y = 0.08;
+            tool.add(palm);
+            const leftFinger = yzShadow(new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.52, 0.08), yellow));
+            leftFinger.position.set(-0.18, 0.36, 0);
+            const rightFinger = yzShadow(new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.52, 0.08), yellow));
+            rightFinger.position.set(0.18, 0.36, 0);
+            tool.add(leftFinger, rightFinger);
+
+            const cameraPod = yzShadow(new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.12, 0.16), black));
+            cameraPod.position.set(0, 0.22, 0.22);
+            tool.add(cameraPod);
+
+            arm.userData.parts = { yaw, shoulder, elbow, lower, wrist, tool, leftFinger, rightFinger };
+            arm.userData.source = 'SO101/Franka-style arm based on google-deepmind__mujoco_menagerie/robotstudio_so101 and RamazanOzdemir__robot-arm-viz components';
+            arm.userData.pose = { yaw: 0, shoulder: 0.18, elbow: -0.92, wrist: 0.4, gripper: 0.7 };
+            arm.userData.applyPose = (pose) => {
+                const p = arm.userData.pose;
+                Object.keys(pose).forEach((key) => { p[key] = pose[key]; });
+                yaw.rotation.y = p.yaw;
+                shoulder.rotation.z = p.shoulder;
+                elbow.rotation.z = p.elbow;
+                wrist.rotation.z = p.wrist;
+                const spread = THREE.MathUtils.lerp(0.12, 0.32, p.gripper);
+                leftFinger.position.x = -spread;
+                rightFinger.position.x = spread;
+            };
+            arm.userData.getToolWorldPosition = () => {
+                const pos = new THREE.Vector3();
+                tool.getWorldPosition(pos);
+                return pos;
+            };
+            arm.userData.applyPose(arm.userData.pose);
+            return arm;
+        }
+
         function createMSubhamDrone(label, color) {
             const droneGroupSrc = new THREE.Group();
             const droneVisuals = new THREE.Group();
@@ -1915,6 +2030,7 @@
             droneGroupSrc.userData.visuals = droneVisuals;
             droneGroupSrc.userData.props = srcProps;
             droneGroupSrc.userData.source = 'MSubham06__Drone_Simulator/index.html';
+            droneGroupSrc.scale.setScalar(4.2);
             scene.add(droneGroupSrc);
             return droneGroupSrc;
         }
@@ -1957,13 +2073,14 @@
             };
 
             const usv = createYunzhouUSVBody();
+            usv.rotation.y = Math.PI / 2;
             droneGroup.add(usv);
             droneGroup.userData.usv = usv;
 
-            const arm = createIacopomRobotArm();
-            arm.scale.setScalar(0.18);
+            const arm = createSO101DeckArm();
+            arm.scale.setScalar(0.92);
             arm.position.copy(usv.userData.markers.armBase);
-            arm.rotation.y = Math.PI * 0.56;
+            arm.rotation.y = -Math.PI / 2;
             usv.add(arm);
 
             const platform = new THREE.Group();
@@ -1978,27 +2095,21 @@
                 pontoon.position.set(sx * 2.95, 0.08, sz * 1.62);
                 platform.add(pontoon);
             }));
-            platform.position.set(16, WATER_SURFACE_Y, -18);
+            platform.position.set(7, WATER_SURFACE_Y, -18);
             scene.add(platform);
 
             const objects = {
-                blueSample: { mesh: createBottle(0x4cb9f4), from: 'platformBlue', to: 'coldBin', status: 'ON PLATFORM' },
-                greenSample: { mesh: createBottle(0x56d481), from: 'platformGreen', to: 'platformGreen', status: 'DISTRACTOR' },
-                sensorModule: { mesh: createSensorBox(), from: 'sensorTray', to: 'deployPad', status: 'ON DECK' }
+                blueSample: { mesh: createBottle(0x4cb9f4), from: 'platformBlue', to: 'coldBin', status: '平台待取' },
+                greenSample: { mesh: createBottle(0x56d481), from: 'platformGreen', to: 'platformGreen', status: '干扰目标' },
+                sensorModule: { mesh: createSensorBox(), from: 'sensorTray', to: 'deployPad', status: '甲板待部署' }
             };
             Object.values(objects).forEach((obj) => scene.add(obj.mesh));
 
             const drones = [
-                createMSubhamDrone('DRONE-1', 0x00ffff),
-                createMSubhamDrone('DRONE-2', 0x55ff99),
-                createMSubhamDrone('DRONE-3', 0xffcc33)
+                createMSubhamDrone('无人机-1', 0x00ffff),
+                createMSubhamDrone('无人机-2', 0x55ff99),
+                createMSubhamDrone('无人机-3', 0xffcc33)
             ];
-
-            const missionPanel = document.createElement('div');
-            missionPanel.className = 'user-coord-row';
-            missionPanel.style.marginTop = '8px';
-            missionPanel.innerHTML = '<span>DECK_TASK</span><span id="yunzhou-task-state" style="color:#27ae60">READY</span>';
-            document.getElementById('user-list').prepend(missionPanel);
 
             return {
                 usv,
@@ -2007,12 +2118,10 @@
                 objects,
                 drones,
                 taskStarted: false,
+                taskMode: 'idle',
                 taskTime: 0,
-                armBase: 0,
-                lowerBase: 0,
-                upperBase: 0,
                 sourceNotes: [
-                    'arm:IacopomC__robot_arm_three_js/regular/assets/js/robot.js',
+                    'arm:google-deepmind__mujoco_menagerie/robotstudio_so101 + RamazanOzdemir__robot-arm-viz',
                     'drone:MSubham06__Drone_Simulator/index.html'
                 ]
             };
@@ -2041,9 +2150,9 @@
             demo.platform.rotation.z = Math.cos(time * 0.43) * 0.014;
 
             const platformPoints = {
-                platformBlue: new THREE.Vector3(17.1, demo.platform.position.y + 0.78, -19.0),
-                platformGreen: new THREE.Vector3(17.7, demo.platform.position.y + 0.78, -18.45),
-                deployPad: new THREE.Vector3(14.6, demo.platform.position.y + 0.82, -16.95)
+                platformBlue: new THREE.Vector3(demo.platform.position.x + 1.1, demo.platform.position.y + 0.74, demo.platform.position.z - 1.0),
+                platformGreen: new THREE.Vector3(demo.platform.position.x + 1.7, demo.platform.position.y + 0.74, demo.platform.position.z - 0.45),
+                deployPad: new THREE.Vector3(demo.platform.position.x - 1.4, demo.platform.position.y + 0.78, demo.platform.position.z + 0.95)
             };
             const deckPoints = {
                 sensorTray: yzWorldFromLocal(demo.usv, demo.usv.userData.markers.sensorTray),
@@ -2052,10 +2161,10 @@
             };
 
             const taskSequence = [
-                { id: 'scan', duration: 5, label: 'SCANNING PLATFORM' },
-                { id: 'sample', duration: 10, label: 'RECOVERING BLUE SAMPLE', object: 'blueSample', to: 'coldBin' },
-                { id: 'sensor', duration: 10, label: 'DEPLOYING SENSOR MODULE', object: 'sensorModule', to: 'deployPad' },
-                { id: 'verify', duration: 5, label: 'VERIFYING RESULT' }
+                { id: 'scan', duration: 5, label: '扫描作业平台' },
+                { id: 'sample', duration: 10, label: '回收蓝色采样瓶', object: 'blueSample', to: 'coldBin' },
+                { id: 'sensor', duration: 10, label: '部署传感器模块', object: 'sensorModule', to: 'deployPad' },
+                { id: 'verify', duration: 5, label: '验证任务结果' }
             ];
             const totalDuration = taskSequence.reduce((sum, step) => sum + step.duration, 0);
             if (demo.taskStarted) demo.taskTime = (demo.taskTime + dt) % totalDuration;
@@ -2071,33 +2180,34 @@
                 cursor += step.duration;
             }
             const taskState = document.getElementById('yunzhou-task-state');
-            if (taskState) taskState.textContent = demo.taskStarted ? active.label : 'READY';
+            if (taskState) taskState.textContent = demo.taskStarted ? active.label : '待命';
 
             const arm = demo.arm;
-            const lower = arm.userData.lowerArm;
-            const upper = arm.userData.upperArm;
-            if (!demo.armInitialized) {
-                demo.armBase = arm.rotation.y;
-                demo.lowerBase = lower.rotation.z;
-                demo.upperBase = upper.rotation.z;
-                demo.armInitialized = true;
+            if (arm.userData.applyPose) {
+                const idlePose = { yaw: 0.05, shoulder: 0.38, elbow: -1.08, wrist: 0.48, gripper: 0.65 };
+                const showPose = demo.taskStarted
+                    ? {
+                        yaw: Math.sin(demo.taskTime * 0.42) * 0.95,
+                        shoulder: 0.15 + Math.sin(demo.taskTime * 0.52) * 0.28,
+                        elbow: -0.92 + Math.cos(demo.taskTime * 0.48) * 0.22,
+                        wrist: 0.42,
+                        gripper: 0.55
+                    }
+                    : idlePose;
+                arm.userData.applyPose(showPose);
             }
-            const missionSwing = demo.taskStarted ? Math.sin(demo.taskTime * 0.55) : Math.sin(time * 0.35) * 0.2;
-            arm.rotation.y = demo.armBase + missionSwing * 0.7;
-            lower.rotation.z = demo.lowerBase + (demo.taskStarted ? Math.sin(demo.taskTime * 0.75) * 0.24 : 0);
-            upper.rotation.z = demo.upperBase + (demo.taskStarted ? Math.cos(demo.taskTime * 0.68) * 0.18 : 0);
 
             Object.entries(demo.objects).forEach(([id, obj]) => {
                 let target;
                 if (id === active.object && localT > 0.25 && localT < 0.72) {
-                    target = yzWorldFromLocal(arm, new THREE.Vector3(0.16, 1.42, -0.14));
-                    obj.status = 'IN GRIPPER';
+                    target = arm.userData.getToolWorldPosition ? arm.userData.getToolWorldPosition() : yzWorldFromLocal(arm, new THREE.Vector3(0.16, 1.42, -0.14));
+                    obj.status = '夹爪中';
                 } else if (id === 'blueSample' && demo.taskStarted && demo.taskTime > 12) {
                     target = deckPoints.coldBin;
-                    obj.status = 'COLD BIN';
+                    obj.status = '已入冷藏箱';
                 } else if (id === 'sensorModule' && demo.taskStarted && demo.taskTime > 22) {
                     target = platformPoints.deployPad;
-                    obj.status = 'DEPLOYED';
+                    obj.status = '已部署';
                 } else if (deckPoints[obj.from]) {
                     target = deckPoints[obj.from];
                 } else {
@@ -2108,15 +2218,21 @@
             });
 
             const droneTargets = [
-                new THREE.Vector3(droneGroup.position.x + Math.sin(time * 0.35) * 20, surfaceY + 22, droneGroup.position.z - 28 + Math.cos(time * 0.35) * 8),
-                new THREE.Vector3(droneGroup.position.x - 4, surfaceY + 30 + Math.sin(time * 1.2), droneGroup.position.z + 4),
-                new THREE.Vector3(demo.platform.position.x + Math.cos(time * 0.55) * 10, demo.platform.position.y + 18, demo.platform.position.z + Math.sin(time * 0.55) * 10)
+                new THREE.Vector3(droneGroup.position.x + Math.sin(time * 0.62) * 5.2, surfaceY + 8.5 + Math.sin(time * 1.2) * 0.35, droneGroup.position.z - 4.8 + Math.cos(time * 0.62) * 2.0),
+                new THREE.Vector3(droneGroup.position.x - 2.5, surfaceY + 10.4 + Math.sin(time * 1.0) * 0.25, droneGroup.position.z + 1.8),
+                new THREE.Vector3(droneGroup.position.x + Math.cos(time * 0.55) * 4.2, surfaceY + 7.2 + Math.sin(time * 1.3) * 0.25, droneGroup.position.z + 4.2 + Math.sin(time * 0.55) * 1.6)
             ];
             demo.drones.forEach((drone, index) => {
+                const prev = drone.position.clone();
                 drone.position.lerp(droneTargets[index], 1 - Math.pow(0.02, dt));
-                drone.lookAt(index === 2 ? demo.platform.position : droneGroup.position);
-                drone.userData.visuals.rotation.x = Math.cos(time + index) * 0.08;
-                drone.userData.visuals.rotation.z = Math.sin(time * 0.8 + index) * 0.08;
+                const delta = drone.position.clone().sub(prev);
+                if (delta.lengthSq() > 0.0001) {
+                    drone.rotation.y = Math.atan2(delta.x, delta.z);
+                }
+                drone.rotation.x = 0;
+                drone.rotation.z = 0;
+                drone.userData.visuals.rotation.x = 0;
+                drone.userData.visuals.rotation.z = Math.sin(time * 1.1 + index) * 0.035;
             });
         }
 
@@ -2792,7 +2908,7 @@
             row.className = 'user-coord-row';
             const left = document.createElement('span');
             const right = document.createElement('span');
-            left.textContent = `FISH_SCHOOL_${s + 1}`;
+            left.textContent = `鱼群_${s + 1}`;
             row.appendChild(left);
             row.appendChild(right);
             fishListEl.appendChild(row);
@@ -3050,8 +3166,8 @@
                 droneGroup.rotation.x = THREE.MathUtils.lerp(droneGroup.rotation.x, targetPitch, 0.16);
                 droneGroup.rotation.z = THREE.MathUtils.lerp(droneGroup.rotation.z, targetRoll, 0.16);
 
-                if (acc.lengthSq()>0 || Math.abs(vacc)>0 || turn>0) { uiRefs.state.innerText="MOVING"; uiRefs.state.className="ui-value status-orange"; }
-                else { uiRefs.state.innerText="STABLE"; uiRefs.state.className="ui-value status-green"; }
+                if (acc.lengthSq()>0 || Math.abs(vacc)>0 || turn>0) { uiRefs.state.innerText="运动中"; uiRefs.state.className="ui-value status-orange"; }
+                else { uiRefs.state.innerText="稳定"; uiRefs.state.className="ui-value status-green"; }
 
                 batVal.innerText = simpleModeBattery.toFixed(2) + "%";
                 batBar.style.width = simpleModeBattery + "%";
@@ -3066,9 +3182,9 @@
                 if(droneDynamics.battery < 20) batBar.style.background = "#d32f2f";
                 else batBar.style.background = "#388e3c";
                 if(keys.w||keys.s||keys.a||keys.d||keys.ArrowLeft||keys.ArrowRight||keys.ArrowUp||keys.ArrowDown) {
-                     uiRefs.state.innerText="MOVING"; uiRefs.state.className="ui-value status-orange";
+                     uiRefs.state.innerText="运动中"; uiRefs.state.className="ui-value status-orange";
                 } else {
-                     uiRefs.state.innerText="HOVER/STABLE"; uiRefs.state.className="ui-value status-green";
+                     uiRefs.state.innerText="悬停/稳定"; uiRefs.state.className="ui-value status-green";
                 }
             }
 
@@ -3255,8 +3371,8 @@
                 const distance = droneGroup.position.distanceTo(pollutantPos);
                 const id = userData.target.id;
                 const posStr = `[${pollutantPos.x.toFixed(0)},${pollutantPos.y.toFixed(1)},${pollutantPos.z.toFixed(0)}]`;
-                userData.coordSpan.innerHTML = `${id} ${posStr} <span style="color:#6f5cff">| Distance: ${distance.toFixed(1)} m</span>`;
-                userData.row.title = `Distance ${distance.toFixed(1)} m`;
+                userData.coordSpan.innerHTML = `${id} ${posStr} <span style="color:#6f5cff">| 距离: ${distance.toFixed(1)} m</span>`;
+                userData.row.title = `距离 ${distance.toFixed(1)} m`;
             });
 
             // update fish school position + distance display (use different color from pollutants)
@@ -3265,7 +3381,7 @@
                 const schoolPos = new THREE.Vector3(sch.x, sch.y, sch.z);
                 const dist = droneGroup.position.distanceTo(schoolPos);
                 const posStr = `[${sch.x.toFixed(0)},${sch.y.toFixed(0)},${sch.z.toFixed(0)}]`;
-                rowInfo.distEl.innerHTML = `${posStr} <span style="color:#27ae60">| Distance: ${dist.toFixed(1)} m</span>`;
+                rowInfo.distEl.innerHTML = `${posStr} <span style="color:#27ae60">| 距离: ${dist.toFixed(1)} m</span>`;
                 rowInfo.labelEl.title = `Fish School ${rowInfo.schoolIndex + 1}`;
             });
 
